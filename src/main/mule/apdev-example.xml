@@ -1,5 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c40b31c1-a0db-4b89-88f0-69d5a6a68c4d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="f07c01be-14a0-4d67-9a5b-27eeb19e57e9" >
+		<http:request-connection host="127.0.0.1" port="8081" />
+	</http:request-config>
+	<flow name="helloFlow" doc:id="cbad0f96-0d04-44a8-ba22-a38d0f7b7dc9" >
+		<http:listener doc:name="GET /hello" doc:id="cbbcd6e0-8863-434a-94b7-ec31facf0219" config-ref="HTTP_Listener_config" path="/hello" allowedMethods="GET">
+			<http:response reasonPhrase="Success" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"name" : "Chinga"
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<set-payload value="#[upper('Goodbye')]" doc:name="hello" doc:id="a98807cb-58a7-47c0-8b05-0933399ce46c" />
+		<http:request method="GET" doc:name="GET /goodbye" doc:id="686a5acb-0195-468f-8e6d-3decc3e7f45c" config-ref="HTTP_Request_configuration" path="/goodbye" responseTimeout="3000">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"fullName" : "Chinga Chaguluka"
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="07d46119-885e-4040-8ccb-86f7842fd538" message="#['\nMessage: ' ++ payload]"/>
+	</flow>
+	<flow name="goodbyeFlow" doc:id="6949e88a-6780-43c8-aba0-674de289b26a" >
+		<http:listener doc:name="GET /goodbye" doc:id="0a0c1670-fafe-41d5-850d-c8507fc4827c" config-ref="HTTP_Listener_config" path="/goodbye"/>
+		<set-payload value="#['Goodbye' ++ attributes.queryParams.fullName as String]" doc:name="Goodbye" doc:id="a3ff6946-1010-4988-af58-3d9a7df1c336" />
+		<logger level="INFO" doc:name="Logger" doc:id="8dd8a7b3-3833-450f-8a1d-eddd5d14a124" message="#[message.attributes.queryParams.fullName]"/>
+	</flow>
+</mule>
